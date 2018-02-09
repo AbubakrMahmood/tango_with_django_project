@@ -35,12 +35,15 @@ def index(request):
     return response
 
 def about(request):
-    if request.session.test_cookie_worked():
-        print("TEST COOKIE WORKED!")
-        request.session.delete_test_cookie()
-        
     context_dict = {'message': "This tutorial was created by Abubakr Mahmood."}
-    return render(request, 'rango/about.html', context=context_dict)
+    visitor_cookie_handler(request)
+    context_dict['visits'] = request.session['visits']
+
+    # Obtain our Response object early so we can add cookie information.
+    response = render(request, 'rango/about.html', context_dict)
+    
+    # Return response back to the user, updating any cookies that need changed
+    return response
 
 def show_category(request, category_name_slug):
     # Create a context dictionary which we can pass
@@ -274,11 +277,11 @@ def visitor_cookie_handler(request):
     if (datetime.now() - last_visit_time).days > 0:
         visits = visits + 1
         # Update the last visit cookie now that we have updated the count
-        response.set_cookie('last_visit', str(datetime.now()))
+        request.session['last_visit'] = str(datetime.now())
     else:
         visits = 1
         # Set the last visit cookie
-        response.set_cookie('last_visit', last_visit_cookie)
+        request.session['last_visit'] = last_visit_cookie
 
     # Update/set the visits cookie
     request.session['visits'] = visits
